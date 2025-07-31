@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.TestService.Controllers
@@ -8,15 +9,20 @@ namespace Microsoft.TestService.Controllers
     /// </summary>
     public class UserController
     {
-        public string GetUser(int id)
+        public async ValueTask<string> GetUserAsync(int id, CancellationToken cancellationToken = default)
         {
+            // Simulate async operation and observe cancellation
+            await Task.Delay(10, cancellationToken).WaitAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             var user = $"User ID: {id}, Name: Test User";
             return user;
         }
 
-        public string CreateUser(object userData)
+        public async ValueTask<string> CreateUserAsync(object userData, CancellationToken cancellationToken = default)
         {
-            // Simulate user creation
+            // Simulate async user creation and observe cancellation
+            await Task.Delay(10, cancellationToken).WaitAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             return "User created successfully";
         }
     }

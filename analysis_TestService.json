@@ -1,0 +1,43 @@
+{
+  "Projects": {
+    "TestService": {
+      "Namespaces": [
+        "System",
+        "System.Collections.Generic",
+        "System.Configuration",
+        "System.Threading.Tasks"
+      ],
+      "Files": {
+        "Controllers.cs": {
+          "Namespaces": [
+            "Microsoft.TestService.Controllers",
+            "Microsoft.TestService.Models",
+            "System",
+            "System.Threading.Tasks"
+          ],
+          "RelativePath": "Controllers.cs"
+        },
+        "Program.cs": {
+          "Namespaces": [
+            "Microsoft.TestService.Program",
+            "Microsoft.TestService.Startup",
+            "System",
+            "System.Threading.Tasks"
+          ],
+          "RelativePath": "Program.cs"
+        },
+        "Services.cs": {
+          "Namespaces": [
+            "Microsoft.TestService.Auth",
+            "Microsoft.TestService.Data",
+            "Microsoft.TestService.Services",
+            "System",
+            "System.Collections.Generic",
+            "System.Configuration"
+          ],
+          "RelativePath": "Services.cs"
+        }
+      }
+    }
+  }
+}

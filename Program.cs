@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Microsoft.TestService.Startup
 {
@@ -22,17 +23,26 @@ namespace Microsoft.TestService.Program
     /// </summary>
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             Console.WriteLine("Starting TestService...");
-            
+
             // Initialize startup
             var startup = new Microsoft.TestService.Startup.Startup();
             startup.Configure();
-            
+
             Console.WriteLine("TestService started successfully");
             Console.WriteLine("Press any key to exit...");
-            Console.ReadLine();
+
+            using var cts = new CancellationTokenSource();
+            try
+            {
+                await Task.Run(() => Console.ReadLine(), cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine("Operation was canceled.");
+            }
         }
     }
 }

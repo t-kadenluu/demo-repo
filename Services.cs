@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.Collections.Concurrent;
+using Microsoft.Extensions.Configuration;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace Microsoft.TestService.Auth
 {
@@ -9,10 +13,20 @@ namespace Microsoft.TestService.Auth
     /// </summary>
     public static class AuthHelper
     {
+        private static IConfiguration _configuration;
+
+        static AuthHelper()
+        {
+            var builder = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", optional: true)
+                .AddEnvironmentVariables();
+            _configuration = builder.Build();
+        }
+
         public static bool ValidateUser(string username, string password)
         {
             // Legacy authentication logic
-            var configValue = ConfigurationManager.AppSettings["AuthEnabled"];
+            var configValue = _configuration["AuthEnabled"];
             return !string.IsNullOrEmpty(username);
         }
 
@@ -27,30 +41,46 @@ namespace Microsoft.TestService.Auth
 namespace Microsoft.TestService.Data
 {
     /// <summary>
-    /// Data access layer using legacy ADO.NET
+    /// Data access layer using modern configuration
     /// </summary>
     public class DataRepository
     {
         private readonly string _connectionString;
 
-        public DataRepository(string connectionString)
+        public DataRepository(IConfiguration configuration)
         {
-            _connectionString = connectionString;
+            // Use Microsoft.Extensions.Configuration for connection string retrieval
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        public List<object> GetData()
+        public async Task<List<object>> GetDataAsync(CancellationToken cancellationToken = default)
         {
             var results = new List<object>();
-            
+
             // Simulate data access
+            await Task.Delay(10, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             results.Add(new { Id = 1, Name = "Sample User" });
-            
+
             return results;
         }
 
         public string SerializeData(object data)
         {
-            return data?.ToString() ?? string.Empty;
+            return data != null ? JsonSerializer.Serialize(data) : string.Empty;
+        }
+
+        // Example: Use thread-safe collection for cross-platform compatibility
+        private readonly ConcurrentDictionary<int, object> _cache = new();
+
+        public void AddToCache(int key, object value)
+        {
+            _cache[key] = value;
+        }
+
+        public bool TryGetFromCache(int key, out object value)
+        {
+            return _cache.TryGetValue(key, out value);
         }
     }
 }
