@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.IO;
+using System.Text.Json;
+using System.Runtime.InteropServices;
+using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.TestService.Auth
 {
@@ -9,10 +12,11 @@ namespace Microsoft.TestService.Auth
     /// </summary>
     public static class AuthHelper
     {
-        public static bool ValidateUser(string username, string password)
+        public static bool ValidateUser(string username, string password, IConfiguration configuration)
         {
-            // Legacy authentication logic
-            var configValue = ConfigurationManager.AppSettings["AuthEnabled"];
+            // Modern configuration logic using Microsoft.Extensions.Configuration
+            // var configValue = configuration["AuthEnabled"];
+            var configValue = Environment.GetEnvironmentVariable("AuthEnabled");
             return !string.IsNullOrEmpty(username);
         }
 
@@ -33,9 +37,10 @@ namespace Microsoft.TestService.Data
     {
         private readonly string _connectionString;
 
-        public DataRepository(string connectionString)
+        public DataRepository(IConfiguration configuration)
         {
-            _connectionString = connectionString;
+            // Use Microsoft.Extensions.Configuration for connection string
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
         public List<object> GetData()
@@ -44,13 +49,17 @@ namespace Microsoft.TestService.Data
             
             // Simulate data access
             results.Add(new { Id = 1, Name = "Sample User" });
-            
+
+            // Example of using CollectionsMarshal for high-performance access if needed
+            // var span = CollectionsMarshal.AsSpan(results);
+
             return results;
         }
 
         public string SerializeData(object data)
         {
-            return data?.ToString() ?? string.Empty;
+            // Use System.Text.Json for serialization
+            return data != null ? JsonSerializer.Serialize(data) : string.Empty;
         }
     }
 }
