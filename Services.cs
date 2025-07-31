@@ -4,6 +4,8 @@ using System.IO;
 using System.Text.Json;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Configuration;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.TestService.Auth
 {
@@ -46,7 +48,7 @@ namespace Microsoft.TestService.Data
         public List<object> GetData()
         {
             var results = new List<object>();
-            
+
             // Simulate data access
             results.Add(new { Id = 1, Name = "Sample User" });
 
@@ -56,10 +58,32 @@ namespace Microsoft.TestService.Data
             return results;
         }
 
-        public string SerializeData(object data)
+        public async Task<string> SerializeDataAsync(object data, CancellationToken cancellationToken = default)
         {
             // Use System.Text.Json for serialization
-            return data != null ? JsonSerializer.Serialize(data) : string.Empty;
+            if (data == null)
+                return string.Empty;
+
+            using var stream = new MemoryStream();
+            await JsonSerializer.SerializeAsync(stream, data, data.GetType(), cancellationToken: cancellationToken);
+            stream.Position = 0;
+            using var reader = new StreamReader(stream);
+            return await reader.ReadToEndAsync(cancellationToken);
+        }
+
+        public async IAsyncEnumerable<object> GetDataAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            var results = new List<object>
+            {
+                new { Id = 1, Name = "Sample User" }
+            };
+
+            foreach (var item in results)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return item;
+                await Task.Yield();
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.TestService.Startup
@@ -32,7 +33,23 @@ namespace Microsoft.TestService.Program
 
             Console.WriteLine("TestService started successfully");
             Console.WriteLine("Press any key to exit...");
-            await Task.Run(() => Console.ReadLine());
+
+            using var cts = new CancellationTokenSource();
+            await WaitForKeyPressAsync(cts.Token);
+        }
+
+        private static async Task WaitForKeyPressAsync(CancellationToken cancellationToken)
+        {
+            // Awaitable, cancellation-aware key press
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                if (Console.KeyAvailable)
+                {
+                    Console.ReadKey(intercept: true);
+                    break;
+                }
+                await Task.Delay(100, cancellationToken);
+            }
         }
     }
 }

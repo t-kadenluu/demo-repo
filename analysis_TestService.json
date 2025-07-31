@@ -2,9 +2,13 @@
   "Projects": {
     "TestService": {
       "Namespaces": [
+        "Microsoft.Extensions.Configuration",
         "System",
         "System.Collections.Generic",
-        "System.Configuration",
+        "System.IO",
+        "System.Runtime.InteropServices",
+        "System.Text.Json",
+        "System.Threading",
         "System.Threading.Tasks"
       ],
       "Files": {
@@ -13,6 +17,7 @@
             "Microsoft.TestService.Controllers",
             "Microsoft.TestService.Models",
             "System",
+            "System.Threading",
             "System.Threading.Tasks"
           ],
           "RelativePath": "Controllers.cs"
@@ -28,12 +33,15 @@
         },
         "Services.cs": {
           "Namespaces": [
+            "Microsoft.Extensions.Configuration",
             "Microsoft.TestService.Auth",
             "Microsoft.TestService.Data",
             "Microsoft.TestService.Services",
             "System",
             "System.Collections.Generic",
-            "System.Configuration"
+            "System.IO",
+            "System.Runtime.InteropServices",
+            "System.Text.Json"
           ],
           "RelativePath": "Services.cs"
         }
