@@ -1,0 +1,7 @@
+C:\Users\t-kadenluu\OneDrive - Microsoft\Desktop\BotTesting\trepo\src\Services\TestService\obj\Debug\net472\TestService.csproj.AssemblyReference.cache
+C:\Users\t-kadenluu\OneDrive - Microsoft\Desktop\BotTesting\trepo\src\Services\TestService\obj\Debug\net472\TestService.csproj.SuggestedBindingRedirects.cache
+C:\Users\t-kadenluu\OneDrive - Microsoft\Desktop\BotTesting\trepo\src\Services\TestService\obj\Debug\net472\TestService.exe.config
+C:\Users\t-kadenluu\OneDrive - Microsoft\Desktop\BotTesting\trepo\src\Services\TestService\obj\Debug\net472\TestService.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\t-kadenluu\OneDrive - Microsoft\Desktop\BotTesting\trepo\src\Services\TestService\obj\Debug\net472\TestService.AssemblyInfoInputs.cache
+C:\Users\t-kadenluu\OneDrive - Microsoft\Desktop\BotTesting\trepo\src\Services\TestService\obj\Debug\net472\TestService.AssemblyInfo.cs
+C:\Users\t-kadenluu\OneDrive - Microsoft\Desktop\BotTesting\trepo\src\Services\TestService\obj\Debug\net472\TestService.csproj.CoreCompileInputs.cache
