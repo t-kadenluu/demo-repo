@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using System.Runtime.InteropServices;
 using Microsoft.Extensions.Configuration;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.TestService.Auth
 {
@@ -54,7 +54,7 @@ namespace Microsoft.TestService.Data
             results.Add(new { Id = 1, Name = "Sample User" });
 
             // Example of using CollectionsMarshal for high-performance access if needed
-            // var span = CollectionsMarshal.AsSpan(results);
+            var span = CollectionsMarshal.AsSpan(results);
 
             return results;
         }
@@ -79,7 +79,7 @@ namespace Microsoft.TestService.Data
                 new { Id = 1, Name = "Sample User" }
             };
 
-            foreach (var item in results)
+            foreach (object item in results)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 yield return item;
