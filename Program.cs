@@ -48,7 +48,8 @@ namespace Microsoft.TestService.Program
                     Console.ReadKey(intercept: true);
                     break;
                 }
-                await Task.Delay(100, cancellationToken);
+                await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
             }
         }
     }

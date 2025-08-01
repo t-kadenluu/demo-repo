@@ -27,6 +27,7 @@
             "Microsoft.TestService.Program",
             "Microsoft.TestService.Startup",
             "System",
+            "System.Threading",
             "System.Threading.Tasks"
           ],
           "RelativePath": "Program.cs"
@@ -41,7 +42,9 @@
             "System.Collections.Generic",
             "System.IO",
             "System.Runtime.InteropServices",
-            "System.Text.Json"
+            "System.Text.Json",
+            "System.Threading",
+            "System.Threading.Tasks"
           ],
           "RelativePath": "Services.cs"
         }
