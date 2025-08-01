@@ -1,4 +1,6 @@
 using System;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.TestService.Controllers
@@ -8,15 +10,28 @@ namespace Microsoft.TestService.Controllers
     /// </summary>
     public class UserController
     {
-        public string GetUser(int id)
+        public async Task<string> GetUserAsync(int id, CancellationToken cancellationToken = default)
         {
-            var user = $"User ID: {id}, Name: Test User";
-            return user;
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var user = new Models.User
+            {
+                Id = id,
+                Name = "Test User",
+                Email = "testuser@example.com",
+                CreatedDate = DateTime.UtcNow
+            };
+            // Serialize using System.Text.Json for .NET 9.0
+            return await Task.Run(() => JsonSerializer.Serialize(user), cancellationToken).ConfigureAwait(false);
         }
 
-        public string CreateUser(object userData)
+        public async Task<string> CreateUserAsync(Models.UserRequest userData, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Simulate user creation
+            // Serialize the request data for logging or processing
+            var serializedData = await Task.Run(() => JsonSerializer.Serialize(userData), cancellationToken).ConfigureAwait(false);
             return "User created successfully";
         }
     }
