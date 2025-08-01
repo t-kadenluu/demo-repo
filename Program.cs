@@ -31,7 +31,7 @@ namespace Microsoft.TestService.Program
             startup.Configure();
 
             Console.WriteLine("TestService started successfully");
-            Console.WriteLine("Press any key to exit...");
+            Console.WriteLine("Press Enter to exit...");
             await Console.In.ReadLineAsync();
         }
     }

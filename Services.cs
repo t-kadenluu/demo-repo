@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
@@ -74,7 +75,7 @@ namespace Microsoft.TestService.Data
             var results = new List<object>();
 
             // Simulate async data access
-            await Task.Delay(10, cancellationToken);
+            await Task.Delay(10, cancellationToken).ConfigureAwait(false);
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -83,7 +84,7 @@ namespace Microsoft.TestService.Data
             return results;
         }
 
-        public string SerializeData<T>(T data)
+        public async Task<string> SerializeDataAsync<T>(T data, CancellationToken cancellationToken = default)
         {
             // Use System.Text.Json for serialization in .NET 9.0
             if (data is null)
@@ -97,10 +98,23 @@ namespace Microsoft.TestService.Data
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping // Explicitly specify encoder for cross-platform unicode handling
             };
 
-            return JsonSerializer.Serialize<T>(data, options);
+#if NET9_0_OR_GREATER
+            var context = JsonContext.Default;
+            using var ms = new MemoryStream();
+            await JsonSerializer.SerializeAsync(ms, data, data?.GetType() ?? typeof(object), context, options, cancellationToken).ConfigureAwait(false);
+            ms.Position = 0;
+            using var reader = new StreamReader(ms);
+            return await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+#else
+            using var ms = new MemoryStream();
+            await JsonSerializer.SerializeAsync(ms, data, options, cancellationToken).ConfigureAwait(false);
+            ms.Position = 0;
+            using var reader = new StreamReader(ms);
+            return await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+#endif
         }
 
-        public async Task SerializeDataAsync<T>(T data, Stream stream, CancellationToken cancellationToken = default)
+        public async Task SerializeDataToStreamAsync<T>(T data, Stream stream, CancellationToken cancellationToken = default)
         {
             if (data is null || stream is null)
                 return;
@@ -113,7 +127,12 @@ namespace Microsoft.TestService.Data
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
 
-            await JsonSerializer.SerializeAsync<T>(stream, data, options, cancellationToken).ConfigureAwait(false);
+#if NET9_0_OR_GREATER
+            var context = JsonContext.Default;
+            await JsonSerializer.SerializeAsync(stream, data, data?.GetType() ?? typeof(object), context, options, cancellationToken).ConfigureAwait(false);
+#else
+            await JsonSerializer.SerializeAsync(stream, data, options, cancellationToken).ConfigureAwait(false);
+#endif
         }
 
         public async Task<T?> DeserializeDataAsync<T>(Stream stream, CancellationToken cancellationToken = default)
@@ -128,8 +147,55 @@ namespace Microsoft.TestService.Data
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
 
+#if NET9_0_OR_GREATER
+            var context = JsonContext.Default;
+            return await JsonSerializer.DeserializeAsync<T>(stream, context, options, cancellationToken).ConfigureAwait(false);
+#else
             return await JsonSerializer.DeserializeAsync<T>(stream, options, cancellationToken).ConfigureAwait(false);
+#endif
         }
+
+        // Example: Parse JSON using System.Text.Json.Nodes for cross-platform compatibility
+        public async Task<JsonNode?> ParseJsonNodeAsync(Stream stream, CancellationToken cancellationToken = default)
+        {
+            if (stream is null)
+                return null;
+
+            // System.Text.Json.Nodes is cross-platform in .NET 9.0
+            using var reader = new StreamReader(stream);
+            var json = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+            return JsonNode.Parse(json, documentOptions: null, cancellationToken: cancellationToken);
+        }
+
+        // Example: Replace legacy JObject/JToken manipulation with JsonNode/JsonObject/JsonArray
+        public JsonObject CreateUserJsonObject(string id, string name)
+        {
+            var user = new JsonObject
+            {
+                ["id"] = JsonValue.Create(id),
+                ["name"] = JsonValue.Create(name)
+            };
+            return user;
+        }
+
+        // Example: Mutate JsonNode using Set, Add, Remove methods
+        public void UpdateUserName(JsonObject user, string newName)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+            user["name"] = JsonValue.Create(newName);
+        }
+    }
+
+    // Source generation context for high-throughput scenarios
+    [JsonSerializable(typeof(object))]
+    [JsonSourceGenerationOptions(
+        PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        WriteIndented = false
+    )]
+    internal partial class JsonContext : JsonSerializerContext
+    {
     }
 }
 
