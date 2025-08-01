@@ -22,16 +22,23 @@ namespace Microsoft.TestService.Program
     /// </summary>
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             Console.WriteLine("Starting TestService...");
-            
+
             // Initialize startup
             var startup = new Microsoft.TestService.Startup.Startup();
             startup.Configure();
-            
+
             Console.WriteLine("TestService started successfully");
             Console.WriteLine("Press any key to exit...");
+            await WaitForKeyPressAsync();
+        }
+
+        private static async Task WaitForKeyPressAsync()
+        {
+            // Use cross-platform async pattern for waiting for user input
+            await Task.Yield();
             Console.ReadLine();
         }
     }
