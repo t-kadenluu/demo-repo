@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace Microsoft.TestService.Auth
 {
@@ -17,16 +20,17 @@ namespace Microsoft.TestService.Auth
         static AuthHelper()
         {
             // Build configuration from appsettings.json or environment variables
+            var configPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
             _configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: true)
+                .AddJsonFile(configPath, optional: true)
                 .AddEnvironmentVariables()
                 .Build();
         }
 
         public static bool ValidateUser(string username, string password)
         {
-            // Updated configuration access
-            var configValue = _configuration["AuthEnabled"];
+            // Updated configuration access using strongly typed GetValue
+            var configValue = _configuration.GetValue<bool>("AuthEnabled");
             return !string.IsNullOrEmpty(username);
         }
 
@@ -58,8 +62,7 @@ namespace Microsoft.TestService.Data
             var results = new List<object>();
 
             // Simulate data access
-            if (cancellationToken.IsCancellationRequested)
-                return results;
+            cancellationToken.ThrowIfCancellationRequested();
 
             results.Add(new { Id = 1, Name = "Sample User" });
 
@@ -73,18 +76,59 @@ namespace Microsoft.TestService.Data
             // Simulate async data access
             await Task.Delay(10, cancellationToken);
 
-            if (cancellationToken.IsCancellationRequested)
-                return results;
+            cancellationToken.ThrowIfCancellationRequested();
 
             results.Add(new { Id = 1, Name = "Sample User" });
 
             return results;
         }
 
-        public string SerializeData(object data)
+        public string SerializeData<T>(T data)
         {
             // Use System.Text.Json for serialization in .NET 9.0
-            return data is null ? string.Empty : JsonSerializer.Serialize(data);
+            if (data is null)
+                return string.Empty;
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                WriteIndented = false,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping // Explicitly specify encoder for cross-platform unicode handling
+            };
+
+            return JsonSerializer.Serialize<T>(data, options);
+        }
+
+        public async Task SerializeDataAsync<T>(T data, Stream stream, CancellationToken cancellationToken = default)
+        {
+            if (data is null || stream is null)
+                return;
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                WriteIndented = false,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+
+            await JsonSerializer.SerializeAsync<T>(stream, data, options, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<T?> DeserializeDataAsync<T>(Stream stream, CancellationToken cancellationToken = default)
+        {
+            if (stream is null)
+                return default;
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+
+            return await JsonSerializer.DeserializeAsync<T>(stream, options, cancellationToken).ConfigureAwait(false);
         }
     }
 }

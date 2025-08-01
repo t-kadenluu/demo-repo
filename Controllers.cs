@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,6 +11,13 @@ namespace Microsoft.TestService.Controllers
     /// </summary>
     public class UserController
     {
+        private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping // Explicitly specify encoder for cross-platform unicode handling
+        };
+
         public async Task<string> GetUserAsync(int id, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -21,8 +29,8 @@ namespace Microsoft.TestService.Controllers
                 Email = "testuser@example.com",
                 CreatedDate = DateTime.UtcNow
             };
-            // Serialize using System.Text.Json for .NET 9.0
-            return await Task.Run(() => JsonSerializer.Serialize(user), cancellationToken).ConfigureAwait(false);
+            // Serialize using System.Text.Json for .NET 9.0 with recommended options
+            return JsonSerializer.Serialize<Models.User>(user, JsonOptions);
         }
 
         public async Task<string> CreateUserAsync(Models.UserRequest userData, CancellationToken cancellationToken = default)
@@ -30,8 +38,8 @@ namespace Microsoft.TestService.Controllers
             cancellationToken.ThrowIfCancellationRequested();
 
             // Simulate user creation
-            // Serialize the request data for logging or processing
-            var serializedData = await Task.Run(() => JsonSerializer.Serialize(userData), cancellationToken).ConfigureAwait(false);
+            // Serialize the request data for logging or processing using recommended options
+            var serializedData = JsonSerializer.Serialize<Models.UserRequest>(userData, JsonOptions);
             return "User created successfully";
         }
     }
