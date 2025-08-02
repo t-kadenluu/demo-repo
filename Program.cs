@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.TestService.Data;
+using Microsoft.TestService.Controllers;
 
 namespace Microsoft.TestService.Startup
 {
