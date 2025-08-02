@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace Microsoft.TestService.Auth
 {
@@ -17,16 +19,17 @@ namespace Microsoft.TestService.Auth
         static AuthHelper()
         {
             // Build configuration from appsettings.json or environment variables
+            var configPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
             _configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: true)
+                .AddJsonFile(configPath, optional: true)
                 .AddEnvironmentVariables()
                 .Build();
         }
 
         public static bool ValidateUser(string username, string password)
         {
-            // Updated configuration access
-            var configValue = _configuration["AuthEnabled"];
+            // Updated configuration access using strongly typed GetValue
+            var authEnabled = _configuration.GetValue<bool>("AuthEnabled");
             return !string.IsNullOrEmpty(username);
         }
 
@@ -58,8 +61,7 @@ namespace Microsoft.TestService.Data
             var results = new List<object>();
 
             // Simulate data access
-            if (cancellationToken.IsCancellationRequested)
-                return results;
+            cancellationToken.ThrowIfCancellationRequested();
 
             results.Add(new { Id = 1, Name = "Sample User" });
 
@@ -73,8 +75,7 @@ namespace Microsoft.TestService.Data
             // Simulate async data access
             await Task.Yield();
 
-            if (cancellationToken.IsCancellationRequested)
-                return results;
+            cancellationToken.ThrowIfCancellationRequested();
 
             results.Add(new { Id = 1, Name = "Sample User" });
 
@@ -84,7 +85,20 @@ namespace Microsoft.TestService.Data
         public string SerializeData(object data)
         {
             // Use System.Text.Json for serialization
-            return data != null ? JsonSerializer.Serialize(data) : string.Empty;
+            // In .NET 9, System.Text.Json is preferred and supports more options.
+            // For anonymous types, specify options if needed.
+            return data != null ? JsonSerializer.Serialize(data, data.GetType(), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }) : string.Empty;
+        }
+
+        public async Task SerializeDataAsync(Stream stream, object data, CancellationToken cancellationToken = default)
+        {
+            if (data == null) return;
+            await JsonSerializer.SerializeAsync(stream, data, data.GetType(), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }, cancellationToken);
+        }
+
+        public async Task<T?> DeserializeDataAsync<T>(Stream stream, CancellationToken cancellationToken = default)
+        {
+            return await JsonSerializer.DeserializeAsync<T>(stream, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }, cancellationToken);
         }
     }
 }

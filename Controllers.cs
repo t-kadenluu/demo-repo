@@ -1,5 +1,8 @@
 using System;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,6 +13,13 @@ namespace Microsoft.TestService.Controllers
     /// </summary>
     public class UserController
     {
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
+        };
+
         public async Task<string> GetUserAsync(int id, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -21,8 +31,8 @@ namespace Microsoft.TestService.Controllers
                 Email = "testuser@example.com",
                 CreatedDate = DateTime.UtcNow
             };
-            // Use System.Text.Json for serialization in .NET 9.0
-            return await Task.FromResult(JsonSerializer.Serialize(user));
+            // Use System.Text.Json for serialization in .NET 9.0 with recommended options
+            return JsonSerializer.Serialize<Models.User>(user, _jsonOptions);
         }
 
         public async Task<string> CreateUserAsync(Models.UserRequest userData, CancellationToken cancellationToken = default)
@@ -30,7 +40,7 @@ namespace Microsoft.TestService.Controllers
             cancellationToken.ThrowIfCancellationRequested();
 
             // Simulate user creation
-            // Use System.Text.Json for serialization in .NET 9.0
+            // Use System.Text.Json for serialization in .NET 9.0 with recommended options
             var createdUser = new Models.User
             {
                 Id = 1, // Simulated new user ID
@@ -38,7 +48,7 @@ namespace Microsoft.TestService.Controllers
                 Email = userData.Email,
                 CreatedDate = DateTime.UtcNow
             };
-            return await Task.FromResult(JsonSerializer.Serialize(createdUser));
+            return JsonSerializer.Serialize<Models.User>(createdUser, _jsonOptions);
         }
     }
 }

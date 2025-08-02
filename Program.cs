@@ -33,7 +33,34 @@ namespace Microsoft.TestService.Program
 
             Console.WriteLine("TestService started successfully");
             Console.WriteLine("Press any key to exit...");
-            await Task.Run(() => Console.ReadLine());
+
+            using var cts = new CancellationTokenSource();
+
+            try
+            {
+                await WaitForKeyPressAsync(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Handle cancellation if needed
+            }
+        }
+
+        private static async Task WaitForKeyPressAsync(CancellationToken cancellationToken)
+        {
+            // Use TaskCompletionSource with RunContinuationsAsynchronously for safe continuations
+            var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            using var registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken));
+
+            _ = Task.Run(() =>
+            {
+                Console.ReadLine();
+                tcs.TrySetResult(null);
+            }, cancellationToken);
+
+            await tcs.Task.ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
         }
     }
 }
