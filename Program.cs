@@ -24,17 +24,20 @@ namespace Microsoft.TestService.Program
     /// </summary>
     public class Program
     {
-        public static void Main(string[] args)
+        // Entry point updated to async Task for modern .NET and cross-platform compatibility
+        public static async Task Main(string[] args)
         {
             Console.WriteLine("Starting TestService...");
-            
+
             // Initialize startup
             var startup = new Microsoft.TestService.Startup.Startup();
             startup.Configure();
-            
+
             Console.WriteLine("TestService started successfully");
             Console.WriteLine("Press any key to exit...");
-            Console.ReadLine();
+
+            // Use Console.ReadLineAsync for async/cross-platform compatibility
+            await Console.In.ReadLineAsync();
         }
     }
 }

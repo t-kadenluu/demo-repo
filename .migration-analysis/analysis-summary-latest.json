@@ -1,0 +1,10 @@
+{
+  "projects": [
+    {
+      // No project data present in this summary file.
+      // If this file is used for configuration or as a placeholder, consider migrating to appsettings.json or another modern configuration approach.
+      // For .NET 9.0, configuration is typically handled via Microsoft.Extensions.Configuration and JSON files.
+      // If this file is not required, it can be removed.
+    }
+  ]
+}

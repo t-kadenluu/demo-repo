@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.IO;
+using System.Text.Json; // Use System.Text.Json for serialization
+using Microsoft.Extensions.Configuration; // Modern configuration
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.TestService.Auth
 {
@@ -9,16 +13,38 @@ namespace Microsoft.TestService.Auth
     /// </summary>
     public static class AuthHelper
     {
+        private static IConfiguration? _configuration;
+
+        // Modern configuration initialization (singleton pattern)
+        private static IConfiguration Configuration
+        {
+            get
+            {
+                if (_configuration == null)
+                {
+                    // Build configuration from appsettings.json and environment variables
+                    _configuration = new ConfigurationBuilder()
+                        .SetBasePath(Directory.GetCurrentDirectory())
+                        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                        .AddEnvironmentVariables()
+                        .Build();
+                }
+                return _configuration;
+            }
+        }
+
         public static bool ValidateUser(string username, string password)
         {
-            // Legacy authentication logic
-            var configValue = ConfigurationManager.AppSettings["AuthEnabled"];
+            // Use modern configuration instead of ConfigurationManager
+            var configValue = Configuration["AuthEnabled"];
+            // TODO: Implement actual authentication logic
             return !string.IsNullOrEmpty(username);
         }
 
         public static string GetCurrentUser()
         {
-            // Simplified for demo - would normally check HttpContext
+            // In ASP.NET Core, use IHttpContextAccessor for user context
+            // For demo, return a placeholder
             return "DemoUser";
         }
     }
@@ -38,19 +64,29 @@ namespace Microsoft.TestService.Data
             _connectionString = connectionString;
         }
 
-        public List<object> GetData()
+        // Modern async pattern with cancellation support
+        public async Task<List<object>> GetDataAsync(CancellationToken cancellationToken = default)
         {
             var results = new List<object>();
-            
-            // Simulate data access
-            results.Add(new { Id = 1, Name = "Sample User" });
-            
+
+            // Simulate async data access
+            await Task.Run(() =>
+            {
+                // Use object initializer and anonymous type
+                results.Add(new { Id = 1, Name = "Sample User" });
+            }, cancellationToken);
+
             return results;
         }
 
-        public string SerializeData(object data)
+        // Modern serialization using System.Text.Json
+        public string SerializeData(object? data)
         {
-            return data?.ToString() ?? string.Empty;
+            if (data is null)
+                return string.Empty;
+
+            // Use System.Text.Json for cross-platform serialization
+            return JsonSerializer.Serialize(data);
         }
     }
 }
@@ -62,14 +98,16 @@ namespace Microsoft.TestService.Services
     /// </summary>
     public interface ILegacyService
     {
-        string GetLegacyData(string id);
+        // Consider making async for future extensibility
+        Task<string> GetLegacyDataAsync(string id, CancellationToken cancellationToken = default);
     }
 
     public class LegacyService : ILegacyService
     {
-        public string GetLegacyData(string id)
+        public Task<string> GetLegacyDataAsync(string id, CancellationToken cancellationToken = default)
         {
-            return $"Legacy data for ID: {id}";
+            // Simulate async operation
+            return Task.FromResult($"Legacy data for ID: {id}");
         }
     }
 }

@@ -1,0 +1,10 @@
+{
+  "projects": [
+    {
+      // No project details provided in the analysis context.
+      // If there were Windows-specific APIs, legacy configuration, or other migration issues,
+      // they would be addressed here. Since the file is a placeholder/summary with no actionable code,
+      // no transformation is required.
+    }
+  ]
+}
