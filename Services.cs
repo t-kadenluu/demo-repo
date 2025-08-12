@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using Microsoft.Extensions.Configuration;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.TestService.Auth
 {
@@ -9,10 +12,22 @@ namespace Microsoft.TestService.Auth
     /// </summary>
     public static class AuthHelper
     {
+        private static IConfiguration _configuration;
+
+        static AuthHelper()
+        {
+            // In .NET 9, use dependency injection or build configuration as needed.
+            // For demonstration, build a configuration from appsettings.json.
+            _configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", optional: true)
+                .AddEnvironmentVariables()
+                .Build();
+        }
+
         public static bool ValidateUser(string username, string password)
         {
-            // Legacy authentication logic
-            var configValue = ConfigurationManager.AppSettings["AuthEnabled"];
+            // Updated to use IConfiguration instead of ConfigurationManager
+            var configValue = _configuration["AuthEnabled"];
             return !string.IsNullOrEmpty(username);
         }
 
@@ -33,24 +48,44 @@ namespace Microsoft.TestService.Data
     {
         private readonly string _connectionString;
 
-        public DataRepository(string connectionString)
+        public DataRepository(IConfiguration configuration)
         {
-            _connectionString = connectionString;
+            // In .NET 9, get connection string from IConfiguration
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        public List<object> GetData()
+        public List<object> GetData(CancellationToken cancellationToken = default)
         {
             var results = new List<object>();
-            
+
             // Simulate data access
+            if (cancellationToken.IsCancellationRequested)
+                return results;
+
             results.Add(new { Id = 1, Name = "Sample User" });
-            
+
+            return results;
+        }
+
+        public async Task<List<object>> GetDataAsync(CancellationToken cancellationToken = default)
+        {
+            var results = new List<object>();
+
+            // Simulate async data access
+            await Task.Delay(10, cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested)
+                return results;
+
+            results.Add(new { Id = 1, Name = "Sample User" });
+
             return results;
         }
 
         public string SerializeData(object data)
         {
-            return data?.ToString() ?? string.Empty;
+            // Use System.Text.Json for serialization in .NET 9
+            return data is null ? string.Empty : JsonSerializer.Serialize(data);
         }
     }
 }
