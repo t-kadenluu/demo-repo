@@ -1,5 +1,8 @@
 using System;
+using System.IO;
+using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,10 +13,14 @@ namespace Microsoft.TestService.Controllers
     /// </summary>
     public class UserController
     {
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+
         public async Task<string> GetUserAsync(int id, CancellationToken cancellationToken = default)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
             var user = new Microsoft.TestService.Models.User
             {
                 Id = id,
@@ -21,16 +28,19 @@ namespace Microsoft.TestService.Controllers
                 Email = "testuser@example.com",
                 CreatedDate = DateTime.UtcNow
             };
-            // Use System.Text.Json for serialization in .NET 9.0
+
             await Task.Yield(); // Ensure async context
-            return JsonSerializer.Serialize(user);
+
+            using var stream = new MemoryStream();
+            await JsonSerializer.SerializeAsync(stream, user, _jsonOptions, cancellationToken);
+            stream.Seek(0, SeekOrigin.Begin);
+            using var reader = new StreamReader(stream, Encoding.UTF8, false, leaveOpen: true);
+            var json = await reader.ReadToEndAsync(cancellationToken);
+            return json;
         }
 
         public async Task<string> CreateUserAsync(Microsoft.TestService.Models.UserRequest userData, CancellationToken cancellationToken = default)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            // Simulate user creation
             var user = new Microsoft.TestService.Models.User
             {
                 Id = Random.Shared.Next(1, 10000),
@@ -38,9 +48,15 @@ namespace Microsoft.TestService.Controllers
                 Email = userData.Email,
                 CreatedDate = DateTime.UtcNow
             };
-            // Use System.Text.Json for serialization in .NET 9.0
+
             await Task.Yield(); // Ensure async context
-            return JsonSerializer.Serialize(user);
+
+            using var stream = new MemoryStream();
+            await JsonSerializer.SerializeAsync(stream, user, _jsonOptions, cancellationToken);
+            stream.Seek(0, SeekOrigin.Begin);
+            using var reader = new StreamReader(stream, Encoding.UTF8, false, leaveOpen: true);
+            var json = await reader.ReadToEndAsync(cancellationToken);
+            return json;
         }
     }
 }

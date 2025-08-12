@@ -34,7 +34,8 @@ namespace Microsoft.TestService.Program
 
             Console.WriteLine("TestService started successfully");
             Console.WriteLine("Press any key to exit...");
-            await Task.Run(() => Console.ReadLine());
+            // Use Console.ReadKeyAsync for non-blocking, modern async input in .NET 9
+            await Console.ReadKeyAsync();
         }
     }
 }
